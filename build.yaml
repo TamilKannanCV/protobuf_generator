@@ -1,0 +1,8 @@
+builders:
+  protobuf_generator:
+    import: "package:protobuf_generator/protobuf_generator.dart"
+    builder_factories: ["getGenerator"]
+    build_extensions: {
+      ".proto": [".dart"]
+    }
+    auto_apply: dependents

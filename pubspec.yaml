@@ -1,0 +1,24 @@
+name: protobuf_generator
+description: "A new Flutter package project."
+version: 1.0.0
+homepage: https://github.com/TamilKannanCV/protobuf_generator
+
+environment:
+  sdk: ">=3.3.4 <4.0.0"
+  flutter: ">=1.17.0"
+
+dependencies:
+  archive: 3.6.1
+  build: 2.4.1
+  flutter:
+    sdk: flutter
+  http: 1.2.1
+  path: 1.9.0
+  yaml: 3.1.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
