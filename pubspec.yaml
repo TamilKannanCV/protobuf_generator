@@ -1,6 +1,6 @@
 name: protobuf_generator
 description: "A flutter generator package for generating code for protobuf, without installing protoc and protoc_plugin manually"
-version: 1.0.2
+version: 1.0.3
 repository: https://github.com/TamilKannanCV/protobuf_generator
 
 environment:

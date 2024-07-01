@@ -11,7 +11,8 @@ class ProcessUtils {
     }
   }
 
-  static Future<ProcessResult> runSafely(String executable, List<String> arguments,
+  static Future<ProcessResult> runSafely(
+      String executable, List<String> arguments,
       {String? workingDirectory,
       Map<String, String>? environment,
       bool includeParentEnvironment = true,

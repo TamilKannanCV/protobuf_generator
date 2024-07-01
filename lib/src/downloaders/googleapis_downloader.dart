@@ -7,7 +7,8 @@ import '../run_once_process.dart';
 import '../utils/file_utils.dart';
 
 class GoogleApisDownloader {
-  static final Directory _googleapisDirectory = Directory(join(FileUtils.temporaryDirectory.path, "googleapis"));
+  static final Directory _googleapisDirectory =
+      Directory(join(FileUtils.temporaryDirectory.path, "googleapis"));
 
   static Uri _googleapisProtoUriVersion(String version) {
     return Uri.parse(
@@ -20,7 +21,8 @@ class GoogleApisDownloader {
     await _fetchProtoc.executeOnce(() async {
       log.info("\nDownloading googleapis for protobuf of version v$version");
 
-      await FileUtils.unzipUri(_googleapisProtoUriVersion(version), _googleapisDirectory);
+      await FileUtils.unzipUri(
+          _googleapisProtoUriVersion(version), _googleapisDirectory);
 
       return true;
     });

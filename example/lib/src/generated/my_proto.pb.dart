@@ -25,24 +25,28 @@ class MyMessage extends $pb.GeneratedMessage {
     return $result;
   }
   MyMessage._() : super();
-  factory MyMessage.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory MyMessage.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+  factory MyMessage.fromBuffer($core.List<$core.int> i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromBuffer(i, r);
+  factory MyMessage.fromJson($core.String i,
+          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+      create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'MyMessage', createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'MyMessage',
+      createEmptyInstance: create)
     ..a<$core.int>(1, _omitFieldNames ? '' : 'value', $pb.PbFieldType.O3)
-    ..hasRequiredFields = false
-  ;
+    ..hasRequiredFields = false;
 
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
-  'Will be removed in next major version')
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+      'Will be removed in next major version')
   MyMessage clone() => MyMessage()..mergeFromMessage(this);
-  @$core.Deprecated(
-  'Using this can add significant overhead to your binary. '
-  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
-  'Will be removed in next major version')
-  MyMessage copyWith(void Function(MyMessage) updates) => super.copyWith((message) => updates(message as MyMessage)) as MyMessage;
+  @$core.Deprecated('Using this can add significant overhead to your binary. '
+      'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+      'Will be removed in next major version')
+  MyMessage copyWith(void Function(MyMessage) updates) =>
+      super.copyWith((message) => updates(message as MyMessage)) as MyMessage;
 
   $pb.BuilderInfo get info_ => _i;
 
@@ -51,13 +55,17 @@ class MyMessage extends $pb.GeneratedMessage {
   MyMessage createEmptyInstance() => create();
   static $pb.PbList<MyMessage> createRepeated() => $pb.PbList<MyMessage>();
   @$core.pragma('dart2js:noInline')
-  static MyMessage getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<MyMessage>(create);
+  static MyMessage getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<MyMessage>(create);
   static MyMessage? _defaultInstance;
 
   @$pb.TagNumber(1)
   $core.int get value => $_getIZ(0);
   @$pb.TagNumber(1)
-  set value($core.int v) { $_setSignedInt32(0, v); }
+  set value($core.int v) {
+    $_setSignedInt32(0, v);
+  }
+
   @$pb.TagNumber(1)
   $core.bool hasValue() => $_has(0);
   @$pb.TagNumber(1)
@@ -68,11 +76,12 @@ class MyServiceApi {
   $pb.RpcClient _client;
   MyServiceApi(this._client);
 
-  $async.Future<MyMessage> myMethod($pb.ClientContext? ctx, MyMessage request) =>
-    _client.invoke<MyMessage>(ctx, 'MyService', 'MyMethod', request, MyMessage())
-  ;
+  $async.Future<MyMessage> myMethod(
+          $pb.ClientContext? ctx, MyMessage request) =>
+      _client.invoke<MyMessage>(
+          ctx, 'MyService', 'MyMethod', request, MyMessage());
 }
 
-
 const _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
-const _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');
+const _omitMessageNames =
+    $core.bool.fromEnvironment('protobuf.omit_message_names');

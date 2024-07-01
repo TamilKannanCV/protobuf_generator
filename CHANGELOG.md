@@ -9,3 +9,7 @@
 ## 1.0.2
 
 * updated package versions to fix conflicts
+
+## 1.0.3
+
+* updated README.md

@@ -13,14 +13,23 @@ import 'downloaders/protoc_downloader.dart';
 class ProtobufGenerator implements Builder {
   ProtobufGenerator(this.options) {
     final config = options.config;
-    protobufVersion = config['protobuf_version'] as String? ?? kDefaultProtocVersion;
-    protocPluginVersion = config['protoc_plugin_version'] as String? ?? kDefaultProtocPluginVersion;
-    rootDirectory = config['proto_root_dir'] as String? ?? kDefaultProtoRootDirectory;
-    protoPaths =
-        (config['proto_paths'] as YamlList?)?.nodes.map((e) => e.value as String).toList() ?? kDefaultProtoPaths;
-    outputDirectory = normalize(config['dart_path'] as String? ?? kDefaultDartOutputDirectory);
-    useInstalledProtoc = config['use_installed_protoc'] as bool? ?? kDefaultUseInstalledProtoc;
-    precompileProtocPlugin = config['precompile_protoc_plugin'] as bool? ?? kDefaultPrecompileProtocPlugin;
+    protobufVersion =
+        config['protobuf_version'] as String? ?? kDefaultProtocVersion;
+    protocPluginVersion = config['protoc_plugin_version'] as String? ??
+        kDefaultProtocPluginVersion;
+    rootDirectory =
+        config['proto_root_dir'] as String? ?? kDefaultProtoRootDirectory;
+    protoPaths = (config['proto_paths'] as YamlList?)
+            ?.nodes
+            .map((e) => e.value as String)
+            .toList() ??
+        kDefaultProtoPaths;
+    outputDirectory = normalize(
+        config['dart_out_dir'] as String? ?? kDefaultDartOutputDirectory);
+    useInstalledProtoc =
+        config['use_installed_protoc'] as bool? ?? kDefaultUseInstalledProtoc;
+    precompileProtocPlugin = config['precompile_protoc_plugin'] as bool? ??
+        kDefaultPrecompileProtocPlugin;
   }
 
   final BuilderOptions options;
@@ -34,10 +43,13 @@ class ProtobufGenerator implements Builder {
 
   @override
   FutureOr<void> build(BuildStep buildStep) async {
-    final protoc = useInstalledProtoc ? File('protoc') : await ProtocDownloader.fetchProtoc(protobufVersion);
+    final protoc = useInstalledProtoc
+        ? File('protoc')
+        : await ProtocDownloader.fetchProtoc(protobufVersion);
     final protocPlugin = useInstalledProtoc
         ? File('')
-        : await ProtocPluginDownloader.fetchProtocPlugin(protocPluginVersion, precompileProtocPlugin);
+        : await ProtocPluginDownloader.fetchProtocPlugin(
+            protocPluginVersion, precompileProtocPlugin);
     protoPaths.add(await GoogleApisDownloader.fetchProtoGoogleApis("1.0"));
 
     final inputPath = normalize(buildStep.inputId.path);
@@ -65,7 +77,8 @@ class ProtobufGenerator implements Builder {
 
   List<String> collectProtocArguments(File protocPlugin, String inputPath) {
     return <String>[
-      if (protocPlugin.path.isNotEmpty) "--plugin=protoc-gen-dart=${protocPlugin.path}",
+      if (protocPlugin.path.isNotEmpty)
+        "--plugin=protoc-gen-dart=${protocPlugin.path}",
       "--dart_out=${join('.', outputDirectory)}",
       ...protoPaths.map((protoPath) => '-I=${join('.', protoPath)}'),
       join('.', inputPath),

@@ -17,7 +17,14 @@ import 'dart:typed_data' as $typed_data;
 const MyNestedMessage$json = {
   '1': 'MyNestedMessage',
   '2': [
-    {'1': 'message', '3': 1, '4': 1, '5': 11, '6': '.MyMessage', '10': 'message'},
+    {
+      '1': 'message',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.MyMessage',
+      '10': 'message'
+    },
   ],
 };
 
@@ -25,4 +32,3 @@ const MyNestedMessage$json = {
 final $typed_data.Uint8List myNestedMessageDescriptor = $convert.base64Decode(
     'Cg9NeU5lc3RlZE1lc3NhZ2USJAoHbWVzc2FnZRgBIAEoCzIKLk15TWVzc2FnZVIHbWVzc2FnZQ'
     '==');
-

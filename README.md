@@ -66,7 +66,7 @@ targets:
             - "proto/"
           # The root directory for generated Dart output files.
           # (Default: "lib/src/proto")
-          out_dir: "lib/src/generated"
+          dart_out_dir: "lib/src/generated"
           # Use the "protoc" command that's available on the PATH instead of downloading one
           # (Default: false)
           use_installed_protoc: false

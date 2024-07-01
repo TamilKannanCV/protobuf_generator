@@ -22,8 +22,8 @@ const MyMessage$json = {
 };
 
 /// Descriptor for `MyMessage`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List myMessageDescriptor = $convert.base64Decode(
-    'CglNeU1lc3NhZ2USFAoFdmFsdWUYASABKAVSBXZhbHVl');
+final $typed_data.Uint8List myMessageDescriptor =
+    $convert.base64Decode('CglNeU1lc3NhZ2USFAoFdmFsdWUYASABKAVSBXZhbHVl');
 
 const $core.Map<$core.String, $core.dynamic> MyServiceBase$json = {
   '1': 'MyService',
@@ -33,11 +33,11 @@ const $core.Map<$core.String, $core.dynamic> MyServiceBase$json = {
 };
 
 @$core.Deprecated('Use myServiceDescriptor instead')
-const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>> MyServiceBase$messageJson = {
+const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
+    MyServiceBase$messageJson = {
   '.MyMessage': MyMessage$json,
 };
 
 /// Descriptor for `MyService`. Decode as a `google.protobuf.ServiceDescriptorProto`.
 final $typed_data.Uint8List myServiceDescriptor = $convert.base64Decode(
     'CglNeVNlcnZpY2USIgoITXlNZXRob2QSCi5NeU1lc3NhZ2UaCi5NeU1lc3NhZ2U=');
-
