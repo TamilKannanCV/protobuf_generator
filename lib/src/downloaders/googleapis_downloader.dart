@@ -10,9 +10,9 @@ class GoogleApisDownloader {
   static final Directory _googleapisDirectory =
       Directory(join(FileUtils.temporaryDirectory.path, "googleapis"));
 
-  static Uri _googleapisProtoUriVersion(String version) {
+  static Uri _googleapisProtoUriVersion() {
     return Uri.parse(
-        'https://github.com/TamilKannanCV/googleapis/releases/download/v$version/googleapis-common-protos.zip');
+        'https://github.com/googleapis/api-common-protos/archive/refs/heads/main.zip');
   }
 
   static final RunOnceProcess _fetchProtoc = RunOnceProcess();
@@ -22,10 +22,10 @@ class GoogleApisDownloader {
       log.info("\nDownloading googleapis for protobuf of version v$version");
 
       await FileUtils.unzipUri(
-          _googleapisProtoUriVersion(version), _googleapisDirectory);
+          _googleapisProtoUriVersion(), _googleapisDirectory);
 
       return true;
     });
-    return _googleapisDirectory.path;
+    return join(_googleapisDirectory.path, "api-common-protos-main");
   }
 }
