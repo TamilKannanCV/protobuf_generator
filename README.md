@@ -33,7 +33,7 @@ targets:
   $default:
     sources:
       - $package$
-      - lib/$lib$
+      - lib/**
       - proto/** # Your .proto directory
 ```
 
@@ -54,25 +54,35 @@ targets:
           # The version of the Protobuf compiler to use.
           # (Default: "27.2", make sure to use quotation marks)
           protobuf_version: "27.2"
+          
           # The version of the Dart protoc_plugin package to use.
           # (Default: "21.1.2", make sure to use quotation marks)
           protoc_plugin_version: "21.1.2"
+
           # Directory which is treated as the root of all Protobuf files.
           # (Default: "proto/")
           proto_root_dir: "proto/"
+
           # Include paths given to the Protobuf compiler during compilation.
           # (Default: ["proto/"])
           proto_paths:
             - "proto/"
+
           # The root directory for generated Dart output files.
           # (Default: "lib/src/proto")
           dart_out_dir: "lib/src/generated"
+
           # Use the "protoc" command that's available on the PATH instead of downloading one
           # (Default: false)
           use_installed_protoc: false
+
           # Whether or not the protoc_plugin Dart scripts should be precompiled for better performance.
           # (Default: true)
           precompile_protoc_plugin: true
+
+          # Whether or not to generate the descriptor file for the proto files
+          # (Default: false)
+          generate_descriptor_file: false
 ```
 
 ## Running

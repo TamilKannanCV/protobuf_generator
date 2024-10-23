@@ -17,3 +17,7 @@
 # 1.0.4
 
 * changed the `googleapis` source
+
+# 1.0.5
+
+* added support for generating `descriptor` file
