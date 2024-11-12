@@ -21,3 +21,7 @@
 # 1.0.5
 
 * added support for generating `descriptor` file
+
+# 1.0.6
+
+* fixed `descriptor` file issue
