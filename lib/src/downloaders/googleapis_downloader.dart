@@ -8,6 +8,7 @@ import '../utils/file_utils.dart';
 
 class GoogleApisDownloader {
   static final Directory _googleapisDirectory = Directory(join(FileUtils.temporaryDirectory.path, "googleapis"));
+  static final Directory directory = _googleapisDirectory;
 
   static Uri _googleapisProtoUriVersion() {
     return Uri.parse('https://github.com/googleapis/api-common-protos/archive/refs/heads/main.zip');

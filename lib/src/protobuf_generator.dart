@@ -5,6 +5,7 @@ import 'package:build/build.dart';
 import 'package:path/path.dart';
 import 'package:protobuf_generator/src/downloaders/googleapis_downloader.dart';
 import 'package:protobuf_generator/src/downloaders/protoc_plugin_downloader.dart';
+import 'package:protobuf_generator/src/extensions/map_extensions.dart';
 import 'package:protobuf_generator/src/utils/process_utils.dart';
 import 'package:yaml/yaml.dart';
 
@@ -13,15 +14,15 @@ import 'downloaders/protoc_downloader.dart';
 class ProtobufGenerator implements Builder {
   ProtobufGenerator(this.options) {
     final config = options.config;
-    protobufVersion = config['protobuf_version'] as String? ?? kDefaultProtocVersion;
-    protocPluginVersion = config['protoc_plugin_version'] as String? ?? kDefaultProtocPluginVersion;
-    rootDirectory = config['proto_root_dir'] as String? ?? kDefaultProtoRootDirectory;
+    protobufVersion = config.getOrNull<String>('protobuf_version') ?? kDefaultProtocVersion;
+    protocPluginVersion = config.getOrNull<String>('protoc_plugin_version') ?? kDefaultProtocPluginVersion;
+    rootDirectory = config.getOrNull<String>('proto_root_dir') ?? kDefaultProtoRootDirectory;
     protoPaths =
-        (config['proto_paths'] as YamlList?)?.nodes.map((e) => e.value as String).toList() ?? kDefaultProtoPaths;
-    outputDirectory = normalize(config['dart_out_dir'] as String? ?? kDefaultDartOutputDirectory);
-    useInstalledProtoc = config['use_installed_protoc'] as bool? ?? kDefaultUseInstalledProtoc;
-    precompileProtocPlugin = config['precompile_protoc_plugin'] as bool? ?? kDefaultPrecompileProtocPlugin;
-    generateDescriptorFile = config['generate_descriptor_file'] as bool? ?? kDefaultGenerateDescriptorFile;
+        (config.getOrNull<YamlList>('proto_paths'))?.nodes.map((e) => e.value as String).toList() ?? kDefaultProtoPaths;
+    outputDirectory = config.getOrNull<String>('dart_out_dir') ?? kDefaultDartOutputDirectory;
+    useInstalledProtoc = config.getOrNull<bool>('use_installed_protoc') ?? kDefaultUseInstalledProtoc;
+    precompileProtocPlugin = config.getOrNull<bool>('precompile_protoc_plugin') ?? kDefaultPrecompileProtocPlugin;
+    generateDescriptorFile = config.getOrNull<bool>('generate_descriptor_file') ?? kDefaultGenerateDescriptorFile;
   }
 
   final BuilderOptions options;
@@ -47,10 +48,10 @@ class ProtobufGenerator implements Builder {
     await buildStep.readAsString(buildStep.inputId);
 
     await Directory(outputDirectory).create(recursive: true);
-    final imports = await extractImports(inputPath);
+    final args = await collectProtocArguments(protocPlugin, inputPath);
     await ProcessUtils.runSafely(
       protoc.path,
-      collectProtocArguments(protocPlugin, inputPath)..addAll(imports),
+      args,
     );
 
     await Future.wait(buildStep.allowedOutputs.map((AssetId out) async {
@@ -65,26 +66,62 @@ class ProtobufGenerator implements Builder {
 
   File loadOutputFile(AssetId out) => File(out.path);
 
-  List<String> collectProtocArguments(File protocPlugin, String inputPath) {
-    return <String>[
-      if (protocPlugin.path.isNotEmpty) "--plugin=protoc-gen-dart=${protocPlugin.path}",
-      "--dart_out=${join('.', outputDirectory)}",
-      ...protoPaths.map((protoPath) => '-I=${join('.', protoPath)}'),
-      join('.', inputPath),
-      if (generateDescriptorFile) ...[
+  /// Generates the necessary arguments for the protobuf compiler.
+  ///
+  /// If [generateDescriptorFile] is true, it includes the necessary arguments
+  /// to generate a descriptor file with imports included.
+  ///
+  /// If [protocPlugin] has a valid path, it adds the plugin argument for the Dart
+  /// protoc plugin.
+  ///
+  /// Adds the output directory for the Dart generated files.
+  ///
+  /// Adds the include paths for the proto files.
+  ///
+  /// Collects all `.proto` files from the specified [protoPaths], excluding those
+  /// that contain 'googleapis' in their path, and adds them to the arguments.
+  Future<List<String>> collectProtocArguments(File protocPlugin, String inputPath) async {
+    log.warning('Generating protobuf files for $inputPath');
+    final args = <String>[];
+
+    if (generateDescriptorFile) {
+      args.addAll([
         '--include_imports',
         '--descriptor_set_out=$outputDirectory/descriptor.desc',
-      ],
-    ];
+      ]);
+    }
+
+    if (protocPlugin.path.isNotEmpty) {
+      args.add("--plugin=protoc-gen-dart=${protocPlugin.path}");
+    }
+
+    args.add("--dart_out=${join('.', outputDirectory)}");
+
+    args.addAll(protoPaths.map((protoPath) => '-I=${join('.', protoPath)}'));
+
+    final imports = await extractGoogleImports(inputPath);
+
+    final protoFiles = protoPaths.expand((protoPath) {
+      final dir = Directory(protoPath);
+      return dir
+          .listSync(recursive: true)
+          .where((entity) => entity is File && entity.path.endsWith('.proto') && !entity.path.contains('googleapis'))
+          .map((entity) => join('.', entity.path));
+    }).toSet()
+      ..addAll(imports);
+
+    args.addAll(protoFiles);
+
+    return args;
   }
 
-  Future<List<String>> extractImports(String filePath) async {
+  Future<List<String>> extractGoogleImports(String filePath) async {
     final file = File(filePath);
     final lines = await file.readAsLines();
     final imports = <String>[];
     for (var line in lines) {
       final match = RegExp(r'import\s+"([^"]+)"').firstMatch(line);
-      if (match != null) {
+      if (match != null && (match.group(1)?.contains('google') ?? false)) {
         imports.add(match.group(1)!);
       }
     }

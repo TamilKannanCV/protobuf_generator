@@ -18,7 +18,7 @@ class ProcessUtils {
       bool runInShell = false,
       Encoding? stdoutEncoding = systemEncoding,
       Encoding? stderrEncoding = systemEncoding}) async {
-    log.warning(arguments);
+    log.warning("\tRunning command: $executable ${arguments.join(' ')}");
     final result = await Process.run(
       executable,
       arguments,
