@@ -14,14 +14,14 @@
 
 * updated README.md
 
-# 1.0.4
+## 1.0.4
 
 * changed the `googleapis` source
 
-# 1.0.5
+## 1.0.5
 
 * added support for generating `descriptor` file
 
-# 1.0.6
+## 1.0.6
 
 * fixed `descriptor` file issue
