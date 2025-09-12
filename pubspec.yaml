@@ -4,17 +4,21 @@ version: 1.0.6
 repository: https://github.com/TamilKannanCV/protobuf_generator
 
 environment:
-  sdk: ">=2.16.0 <4.0.0"
+  sdk: ^3.9.2
 
 dependencies:
   flutter:
     sdk: flutter
-  archive: ^3.1.6
-  build: ^2.1.1
-  http: ">=0.13.4 <2.0.0"
-  path: ^1.8.0
-  yaml: ^3.1.0
+
+  archive: ^4.0.7
+  build: ^4.0.0
+  http: ^1.5.0
+  path: ^1.9.1
+  protoc_plugin: ^22.5.0
+  yaml: ^3.1.3
 
 dev_dependencies:
-  lints: ">=1.0.0 <3.0.0"
-  test: ^1.16.0
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^6.0.0
