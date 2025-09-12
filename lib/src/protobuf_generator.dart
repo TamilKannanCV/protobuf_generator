@@ -17,10 +17,11 @@ class ProtobufGenerator implements Builder {
     protobufVersion = config.getOrNull<String>('protobuf_version') ?? kDefaultProtocVersion;
     protocPluginVersion = config.getOrNull<String>('protoc_plugin_version') ?? kDefaultProtocPluginVersion;
     rootDirectory = config.getOrNull<String>('proto_root_dir') ?? kDefaultProtoRootDirectory;
-    protoPaths =
-        (config.getOrNull<YamlList>('proto_paths'))?.nodes.map((e) => e.value as String).toList() ?? kDefaultProtoPaths;
+    protoPaths = (config.getOrNull<YamlList>('proto_paths'))?.nodes.map((e) => e.value as String).toList() ?? kDefaultProtoPaths;
     outputDirectory = config.getOrNull<String>('dart_out_dir') ?? kDefaultDartOutputDirectory;
     useInstalledProtoc = config.getOrNull<bool>('use_installed_protoc') ?? kDefaultUseInstalledProtoc;
+    useInstalledProtocPlugin = config.getOrNull<bool>('use_installed_protoc_plugin') ?? kDefaultUseInstalledProtocPlugin;
+    fetchGoogleApis = config.getOrNull<bool>('fetch_google_apis') ?? kDefaultUseInstalledProtoc;
     precompileProtocPlugin = config.getOrNull<bool>('precompile_protoc_plugin') ?? kDefaultPrecompileProtocPlugin;
     generateDescriptorFile = config.getOrNull<bool>('generate_descriptor_file') ?? kDefaultGenerateDescriptorFile;
   }
@@ -32,16 +33,16 @@ class ProtobufGenerator implements Builder {
   late List<String> protoPaths;
   late String outputDirectory;
   late bool useInstalledProtoc;
+  late bool useInstalledProtocPlugin;
+  late bool fetchGoogleApis;
   late bool precompileProtocPlugin;
   late bool generateDescriptorFile;
 
   @override
   FutureOr<void> build(BuildStep buildStep) async {
     final protoc = useInstalledProtoc ? File('protoc') : await ProtocDownloader.fetchProtoc(protobufVersion);
-    final protocPlugin = useInstalledProtoc
-        ? File('')
-        : await ProtocPluginDownloader.fetchProtocPlugin(protocPluginVersion, precompileProtocPlugin);
-    protoPaths.add(await GoogleApisDownloader.fetchProtoGoogleApis("1.0"));
+    final protocPlugin = useInstalledProtocPlugin ? null : await ProtocPluginDownloader.fetchProtocPlugin(protocPluginVersion, precompileProtocPlugin);
+    if (fetchGoogleApis) protoPaths.add(await GoogleApisDownloader.fetchProtoGoogleApis("1.0"));
 
     final inputPath = normalize(buildStep.inputId.path);
 
@@ -80,7 +81,7 @@ class ProtobufGenerator implements Builder {
   ///
   /// Collects all `.proto` files from the specified [protoPaths], excluding those
   /// that contain 'googleapis' in their path, and adds them to the arguments.
-  Future<List<String>> collectProtocArguments(File protocPlugin, String inputPath) async {
+  Future<List<String>> collectProtocArguments(File? protocPlugin, String inputPath) async {
     log.warning('Generating protobuf files for $inputPath');
     final args = <String>[];
 
@@ -91,7 +92,7 @@ class ProtobufGenerator implements Builder {
       ]);
     }
 
-    if (protocPlugin.path.isNotEmpty) {
+    if (protocPlugin != null) {
       args.add("--plugin=protoc-gen-dart=${protocPlugin.path}");
     }
 
@@ -144,6 +145,8 @@ class ProtobufGenerator implements Builder {
   final kDefaultProtoPaths = ['proto/'];
   final kDefaultDartOutputDirectory = 'lib/src/proto/';
   final kDefaultUseInstalledProtoc = false;
+  final kDefaultUseInstalledProtocPlugin = false;
+  final kDefaultFetchGoogleApis = false;
   final kDefaultPrecompileProtocPlugin = true;
   final kDefaultGenerateDescriptorFile = false;
 }
