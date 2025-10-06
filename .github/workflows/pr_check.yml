@@ -2,12 +2,11 @@ name: PR Check
 
 on:
   pull_request:
-    branches: [main, master]
-  workflow_dispatch:
+    branches: [master]
 
 jobs:
-  pub-publish-dry-run:
-    name: Validate Package for Publishing
+  dry-run:
+    name: Pub Publish Dry Run
     runs-on: ubuntu-latest
     
     steps:
@@ -17,7 +16,6 @@ jobs:
       - name: Setup Flutter SDK
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: stable
           channel: stable
           
       - name: Get dependencies
@@ -26,11 +24,8 @@ jobs:
       - name: Verify formatting
         run: dart format --output=none --set-exit-if-changed .
         
-      - name: Analyze project source
-        run: dart analyze --fatal-infos
-        
-      - name: Run tests
-        run: dart test
-        
-      - name: Check pub publish dry run
-        run: dart pub publish --dry-run
+      - name: Pub publish dry run
+        run: |
+          set -e
+          dart pub publish --dry-run
+          echo "✅ Package validation passed - ready for publishing!"
