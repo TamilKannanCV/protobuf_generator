@@ -25,3 +25,7 @@
 ## 1.0.6
 
 * fixed `descriptor` file issue
+
+## 1.0.7
+
+* added git repo support, refer `build.yaml` for more details

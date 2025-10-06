@@ -7,10 +7,12 @@ import 'package:protobuf_generator/src/utils/process_utils.dart';
 import '../run_once_process.dart';
 
 class ProtocPluginDownloader {
-  static final Directory _pluginDirectory = Directory(path.join(FileUtils.temporaryDirectory.path, 'plugin'));
+  static final Directory _pluginDirectory =
+      Directory(path.join(FileUtils.temporaryDirectory.path, 'plugin'));
 
   static Uri _protocPluginUriFromVersion(String? version) {
-    return Uri.parse('https://github.com/google/protobuf.dart/archive/refs/tags/protoc_plugin-v$version.zip');
+    return Uri.parse(
+        'https://github.com/google/protobuf.dart/archive/refs/tags/protoc_plugin-v$version.zip');
   }
 
   static String _protoPluginName() {
@@ -20,10 +22,12 @@ class ProtocPluginDownloader {
   static final RunOnceProcess _unpack = RunOnceProcess();
   static final RunOnceProcess _precompile = RunOnceProcess();
 
-  static Future<File> fetchProtocPlugin(String version, bool precompileProtocPlugin) async {
+  static Future<File> fetchProtocPlugin(
+      String version, bool precompileProtocPlugin) async {
     const packages = ['protoc_plugin', 'protobuf'];
 
-    final versionDirectory = Directory(path.join(_pluginDirectory.path, 'v${version.replaceAll('.', '_')}'));
+    final versionDirectory = Directory(
+        path.join(_pluginDirectory.path, 'v${version.replaceAll('.', '_')}'));
     final protocPluginPackageDirectory = Directory(path.join(
       versionDirectory.path,
       'protobuf.dart-protoc_plugin-v$version',
@@ -58,7 +62,8 @@ class ProtocPluginDownloader {
               (pkg) => ProcessUtils.runSafely(
                 'dart',
                 ['pub', 'get'],
-                workingDirectory: path.join(protocPluginPackageDirectory.path, pkg),
+                workingDirectory:
+                    path.join(protocPluginPackageDirectory.path, pkg),
               ),
             ),
           );
