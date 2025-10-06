@@ -83,6 +83,32 @@ targets:
           # Whether or not to generate the descriptor file for the proto files
           # (Default: false)
           generate_descriptor_file: false
+          # GitHub repositories configuration
+          # GitHub repositories containing proto files to include
+          github_repos:
+            # Simple format - just the repository URL (uses 'main' branch and repository root)
+            - "https://github.com/owner/proto-definitions"
+            
+            # Full format with branch and subdirectory specification
+            - url: "https://github.com/grpc/grpc-proto"
+              branch: "master"
+              sub_path: "grpc"
+              
+            # Another example with a specific tag/branch
+            - url: "https://github.com/envoyproxy/protoc-gen-validate"
+              branch: "v0.10.1"
+              sub_path: "validate"
+              
+            # SSH format also supported
+            - url: "git@github.com:company/internal-protos.git"
+              branch: "main"
+              sub_path: "api/v1"
+              
+            # Custom GitHub domain (GitHub Enterprise) examples
+            - url: "git@cred.github.com:dreamplug-tech/protorepo.git"
+              branch: "master"
+            - url: "https://enterprise.github.com/company/repo"
+              branch: "main"
 ```
 
 ## Running

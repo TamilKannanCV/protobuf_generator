@@ -7,7 +7,8 @@ import '../run_once_process.dart';
 import '../utils/file_utils.dart';
 
 class GitHubRepoDownloader {
-  static final Directory _githubReposDirectory = Directory(join(FileUtils.temporaryDirectory.path, "github_repos"));
+  static final Directory _githubReposDirectory =
+      Directory(join(FileUtils.temporaryDirectory.path, "github_repos"));
   static final Map<String, RunOnceProcess> _fetchProcesses = {};
 
   /// Downloads a GitHub repository and returns the path to the cloned directory.
@@ -21,7 +22,8 @@ class GitHubRepoDownloader {
   ///
   /// [branch] specifies which branch/tag to clone (defaults to 'main')
   /// [subPath] specifies a subdirectory within the repo to use as the proto root
-  static Future<String> fetchGitHubRepo(String repoUrl, {String branch = 'main', String? subPath}) async {
+  static Future<String> fetchGitHubRepo(String repoUrl,
+      {String branch = 'main', String? subPath}) async {
     final repoKey = '$repoUrl:$branch';
 
     // Create a unique process for each repo+branch combination
@@ -32,7 +34,8 @@ class GitHubRepoDownloader {
 
       // Parse repository information
       final repoInfo = _parseGitHubUrl(repoUrl);
-      final repoName = '${repoInfo['domain']}_${repoInfo['owner']}_${repoInfo['repo']}_$branch';
+      final repoName =
+          '${repoInfo['domain']}_${repoInfo['owner']}_${repoInfo['repo']}_$branch';
       final repoDir = Directory(join(_githubReposDirectory.path, repoName));
 
       // Clean up existing directory if it exists
@@ -54,7 +57,8 @@ class GitHubRepoDownloader {
     });
 
     final repoInfo = _parseGitHubUrl(repoUrl);
-    final repoName = '${repoInfo['domain']}_${repoInfo['owner']}_${repoInfo['repo']}_$branch';
+    final repoName =
+        '${repoInfo['domain']}_${repoInfo['owner']}_${repoInfo['repo']}_$branch';
     final repoDir = Directory(join(_githubReposDirectory.path, repoName));
 
     if (subPath != null) {
@@ -64,7 +68,8 @@ class GitHubRepoDownloader {
     return repoDir.path;
   }
 
-  static Future<void> _cloneWithGit(String repoUrl, String branch, Directory targetDir) async {
+  static Future<void> _cloneWithGit(
+      String repoUrl, String branch, Directory targetDir) async {
     final result = await Process.run(
       'git',
       ['clone', '--depth', '1', '--branch', branch, repoUrl, targetDir.path],
@@ -75,18 +80,21 @@ class GitHubRepoDownloader {
     }
   }
 
-  static Future<void> _downloadAsZip(Map<String, String> repoInfo, String branch, Directory targetDir) async {
+  static Future<void> _downloadAsZip(
+      Map<String, String> repoInfo, String branch, Directory targetDir) async {
     final domain = repoInfo['domain']!;
     final owner = repoInfo['owner']!;
     final repo = repoInfo['repo']!;
 
     // For custom GitHub domains, we need to use HTTPS with the domain
-    final zipUrl = Uri.parse('https://$domain/$owner/$repo/archive/refs/heads/$branch.zip');
+    final zipUrl = Uri.parse(
+        'https://$domain/$owner/$repo/archive/refs/heads/$branch.zip');
 
     await FileUtils.unzipUri(zipUrl, targetDir.parent);
 
     // The ZIP extraction creates a directory named like "repo-branch"
-    final extractedDir = Directory(join(targetDir.parent.path, '$repo-$branch'));
+    final extractedDir =
+        Directory(join(targetDir.parent.path, '$repo-$branch'));
     if (await extractedDir.exists()) {
       await extractedDir.rename(targetDir.path);
     }
@@ -97,7 +105,8 @@ class GitHubRepoDownloader {
     RegExpMatch? match;
 
     // HTTPS format: https://github.com/owner/repo(.git)? or https://custom.github.com/owner/repo(.git)?
-    match = RegExp(r'https://([^/]+)/([^/]+)/([^/.]+)(?:\.git)?/?$').firstMatch(repoUrl);
+    match = RegExp(r'https://([^/]+)/([^/]+)/([^/.]+)(?:\.git)?/?$')
+        .firstMatch(repoUrl);
     if (match != null) {
       return {
         'domain': match.group(1)!,
@@ -107,7 +116,8 @@ class GitHubRepoDownloader {
     }
 
     // SSH format: git@github.com:owner/repo.git or git@custom.github.com:owner/repo.git
-    match = RegExp(r'git@([^:]+):([^/]+)/([^/.]+)(?:\.git)?$').firstMatch(repoUrl);
+    match =
+        RegExp(r'git@([^:]+):([^/]+)/([^/.]+)(?:\.git)?$').firstMatch(repoUrl);
     if (match != null) {
       return {
         'domain': match.group(1)!,

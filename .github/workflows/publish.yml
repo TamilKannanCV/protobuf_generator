@@ -1,0 +1,41 @@
+name: Publish to pub.dev
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  publish:
+    name: Publish Package to pub.dev
+    runs-on: ubuntu-latest
+    environment: pub-dev
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Dart SDK
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+          
+      - name: Get dependencies
+        run: dart pub get
+        
+      - name: Verify formatting
+        run: dart format --output=none --set-exit-if-changed .
+        
+      - name: Analyze project source
+        run: dart analyze --fatal-infos
+        
+      - name: Run tests
+        run: dart test
+        
+      - name: Check pub publish dry run
+        run: dart pub publish --dry-run
+        
+      - name: Publish to pub.dev
+        run: dart pub publish --force
+        env:
+          PUB_CREDENTIALS: ${{ secrets.PUB_CREDENTIALS }}
