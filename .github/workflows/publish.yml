@@ -2,27 +2,11 @@ name: Publish to pub.dev
 
 on:
   push:
-    branches:
-      - master
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
 
 jobs:
   publish:
-    name: Publish Package to pub.dev
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        
-      - name: Setup Flutter SDK
-        uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          
-      - name: Get dependencies
-        run: flutter pub get
-        
-      - name: Publish to pub.dev
-        run: dart pub publish --force
-        env:
-          PUB_CREDENTIALS: ${{ secrets.PUB_CREDENTIALS }}
+    permissions:
+      id-token: write # Required for authentication using OIDC
+    uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1
