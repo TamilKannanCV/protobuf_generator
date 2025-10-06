@@ -8,22 +8,48 @@ import '../utils/file_utils.dart';
 
 class GoogleApisDownloader {
   static final Directory _googleapisDirectory = Directory(join(FileUtils.temporaryDirectory.path, "googleapis"));
+  static final Directory _protobufDirectory = Directory(join(FileUtils.temporaryDirectory.path, "protobuf"));
   static final Directory directory = _googleapisDirectory;
 
-  static Uri _googleapisProtoUriVersion() {
-    return Uri.parse('https://github.com/googleapis/api-common-protos/archive/refs/heads/main.zip');
+  static Uri _protobufProtoUriVersion() {
+    return Uri.parse('https://github.com/protocolbuffers/protobuf/archive/refs/heads/main.zip');
   }
 
-  static final RunOnceProcess _fetchProtoc = RunOnceProcess();
+  static final RunOnceProcess _fetchGoogleApis = RunOnceProcess();
+  static final RunOnceProcess _fetchProtobuf = RunOnceProcess();
 
-  static Future<String> fetchProtoGoogleApis(String version) async {
-    await _fetchProtoc.executeOnce(() async {
-      log.info("\nDownloading googleapis for protobuf of version v$version");
+  static Future<List<String>> fetchProtoGoogleApis() async {
+    final paths = <String>[];
 
-      await FileUtils.unzipUri(_googleapisProtoUriVersion(), _googleapisDirectory);
+    await _fetchGoogleApis.executeOnce(() async {
+      if (await _googleapisDirectory.exists()) {
+        await _googleapisDirectory.delete(recursive: true);
+      }
+
+      await _googleapisDirectory.create(recursive: true);
+
+      final result = await Process.run(
+        'git',
+        ['clone', '--depth', '1', '--branch', 'master', 'https://github.com/googleapis/googleapis.git', 'repo'],
+        workingDirectory: _googleapisDirectory.path,
+      );
+
+      if (result.exitCode != 0) {
+        throw Exception('Git clone failed: ${result.stderr}');
+      }
 
       return true;
     });
-    return join(_googleapisDirectory.path, "api-common-protos-main");
+
+    paths.add(join(_googleapisDirectory.path, "repo"));
+
+    await _fetchProtobuf.executeOnce(() async {
+      log.info("\nDownloading protobuf repository for Google types");
+      await FileUtils.unzipUri(_protobufProtoUriVersion(), _protobufDirectory);
+      return true;
+    });
+    paths.add(join(_protobufDirectory.path, "protobuf-main", "src"));
+
+    return paths;
   }
 }
