@@ -7,15 +7,12 @@ import '../run_once_process.dart';
 import '../utils/file_utils.dart';
 
 class GoogleApisDownloader {
-  static final Directory _googleapisDirectory =
-      Directory(join(FileUtils.temporaryDirectory.path, "googleapis"));
-  static final Directory _protobufDirectory =
-      Directory(join(FileUtils.temporaryDirectory.path, "protobuf"));
+  static final Directory _googleapisDirectory = Directory(join(FileUtils.temporaryDirectory.path, "googleapis"));
+  static final Directory _protobufDirectory = Directory(join(FileUtils.temporaryDirectory.path, "protobuf"));
   static final Directory directory = _googleapisDirectory;
 
   static Uri _protobufProtoUriVersion() {
-    return Uri.parse(
-        'https://github.com/protocolbuffers/protobuf/archive/refs/heads/main.zip');
+    return Uri.parse('https://github.com/protocolbuffers/protobuf/archive/refs/heads/main.zip');
   }
 
   static final RunOnceProcess _fetchGoogleApis = RunOnceProcess();
@@ -33,15 +30,7 @@ class GoogleApisDownloader {
 
       final result = await Process.run(
         'git',
-        [
-          'clone',
-          '--depth',
-          '1',
-          '--branch',
-          'master',
-          'https://github.com/googleapis/googleapis.git',
-          'repo'
-        ],
+        ['clone', '--depth', '1', '--branch', 'master', 'https://github.com/googleapis/googleapis.git', 'repo'],
         workingDirectory: _googleapisDirectory.path,
       );
 

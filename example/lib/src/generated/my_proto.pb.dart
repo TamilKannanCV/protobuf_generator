@@ -25,16 +25,12 @@ class MyMessage extends $pb.GeneratedMessage {
     return $result;
   }
   MyMessage._() : super();
-  factory MyMessage.fromBuffer($core.List<$core.int> i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+  factory MyMessage.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(i, r);
-  factory MyMessage.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+  factory MyMessage.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'MyMessage',
-      createEmptyInstance: create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'MyMessage', createEmptyInstance: create)
     ..a<$core.int>(1, _omitFieldNames ? '' : 'value', $pb.PbFieldType.O3)
     ..hasRequiredFields = false;
 
@@ -55,8 +51,7 @@ class MyMessage extends $pb.GeneratedMessage {
   MyMessage createEmptyInstance() => create();
   static $pb.PbList<MyMessage> createRepeated() => $pb.PbList<MyMessage>();
   @$core.pragma('dart2js:noInline')
-  static MyMessage getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<MyMessage>(create);
+  static MyMessage getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<MyMessage>(create);
   static MyMessage? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -76,12 +71,9 @@ class MyServiceApi {
   $pb.RpcClient _client;
   MyServiceApi(this._client);
 
-  $async.Future<MyMessage> myMethod(
-          $pb.ClientContext? ctx, MyMessage request) =>
-      _client.invoke<MyMessage>(
-          ctx, 'MyService', 'MyMethod', request, MyMessage());
+  $async.Future<MyMessage> myMethod($pb.ClientContext? ctx, MyMessage request) =>
+      _client.invoke<MyMessage>(ctx, 'MyService', 'MyMethod', request, MyMessage());
 }
 
 const _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
-const _omitMessageNames =
-    $core.bool.fromEnvironment('protobuf.omit_message_names');
+const _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');

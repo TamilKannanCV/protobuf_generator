@@ -26,6 +26,7 @@ targets:
           dart_path: "lib/src/generated"
           # Enable the gRPC flag for the Dart protoc plugin to generate `.pbgrpc.dart` files.
           # (Default: false)
+          generate_grpc: false
           # Whether or not the protoc_plugin Dart scripts should be precompiled for better performance.
           # (Default: true)
           precompile_protoc_plugin: true

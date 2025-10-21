@@ -21,8 +21,7 @@ import 'my_proto.pbjson.dart';
 export 'my_proto.pb.dart';
 
 abstract class MyServiceBase extends $pb.GeneratedService {
-  $async.Future<$0.MyMessage> myMethod(
-      $pb.ServerContext ctx, $0.MyMessage request);
+  $async.Future<$0.MyMessage> myMethod($pb.ServerContext ctx, $0.MyMessage request);
 
   $pb.GeneratedMessage createRequest($core.String methodName) {
     switch (methodName) {
@@ -33,8 +32,8 @@ abstract class MyServiceBase extends $pb.GeneratedService {
     }
   }
 
-  $async.Future<$pb.GeneratedMessage> handleCall($pb.ServerContext ctx,
-      $core.String methodName, $pb.GeneratedMessage request) {
+  $async.Future<$pb.GeneratedMessage> handleCall(
+      $pb.ServerContext ctx, $core.String methodName, $pb.GeneratedMessage request) {
     switch (methodName) {
       case 'MyMethod':
         return this.myMethod(ctx, request as $0.MyMessage);
@@ -44,6 +43,5 @@ abstract class MyServiceBase extends $pb.GeneratedService {
   }
 
   $core.Map<$core.String, $core.dynamic> get $json => MyServiceBase$json;
-  $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
-      get $messageJson => MyServiceBase$messageJson;
+  $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>> get $messageJson => MyServiceBase$messageJson;
 }

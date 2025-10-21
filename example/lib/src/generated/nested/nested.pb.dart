@@ -29,16 +29,12 @@ class MyNestedMessage extends $pb.GeneratedMessage {
   factory MyNestedMessage.fromBuffer($core.List<$core.int> i,
           [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromBuffer(i, r);
-  factory MyNestedMessage.fromJson($core.String i,
-          [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
+  factory MyNestedMessage.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) =>
       create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
-      _omitMessageNames ? '' : 'MyNestedMessage',
-      package: const $pb.PackageName(_omitMessageNames ? '' : 'nested'),
-      createEmptyInstance: create)
-    ..aOM<$0.MyMessage>(1, _omitFieldNames ? '' : 'message',
-        subBuilder: $0.MyMessage.create)
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'MyNestedMessage',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'nested'), createEmptyInstance: create)
+    ..aOM<$0.MyMessage>(1, _omitFieldNames ? '' : 'message', subBuilder: $0.MyMessage.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('Using this can add significant overhead to your binary. '
@@ -49,19 +45,17 @@ class MyNestedMessage extends $pb.GeneratedMessage {
       'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
       'Will be removed in next major version')
   MyNestedMessage copyWith(void Function(MyNestedMessage) updates) =>
-      super.copyWith((message) => updates(message as MyNestedMessage))
-          as MyNestedMessage;
+      super.copyWith((message) => updates(message as MyNestedMessage)) as MyNestedMessage;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
   static MyNestedMessage create() => MyNestedMessage._();
   MyNestedMessage createEmptyInstance() => create();
-  static $pb.PbList<MyNestedMessage> createRepeated() =>
-      $pb.PbList<MyNestedMessage>();
+  static $pb.PbList<MyNestedMessage> createRepeated() => $pb.PbList<MyNestedMessage>();
   @$core.pragma('dart2js:noInline')
-  static MyNestedMessage getDefault() => _defaultInstance ??=
-      $pb.GeneratedMessage.$_defaultFor<MyNestedMessage>(create);
+  static MyNestedMessage getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<MyNestedMessage>(create);
   static MyNestedMessage? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -80,5 +74,4 @@ class MyNestedMessage extends $pb.GeneratedMessage {
 }
 
 const _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
-const _omitMessageNames =
-    $core.bool.fromEnvironment('protobuf.omit_message_names');
+const _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');

@@ -83,6 +83,10 @@ targets:
           # Whether or not to generate the descriptor file for the proto files
           # (Default: false)
           generate_descriptor_file: false
+
+          # Whether or not to generate gRPC service stubs (.pbgrpc.dart files)
+          # (Default: false)
+          generate_grpc: false
           # GitHub repositories configuration
           # GitHub repositories containing proto files to include
           github_repos:

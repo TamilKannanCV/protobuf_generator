@@ -29,3 +29,7 @@
 ## 1.0.7
 
 * added git repo support, refer `build.yaml` for more details
+
+## 1.0.8
+
+* added `generate_grpc` gRPC flag to generate `.pbgrpc.dart` files. Fixes #4

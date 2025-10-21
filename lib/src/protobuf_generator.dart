@@ -15,28 +15,17 @@ import 'downloaders/protoc_downloader.dart';
 class ProtobufGenerator implements Builder {
   ProtobufGenerator(this.options) {
     final config = options.config;
-    protobufVersion =
-        config.getOrNull<String>('protobuf_version') ?? kDefaultProtocVersion;
-    protocPluginVersion = config.getOrNull<String>('protoc_plugin_version') ??
-        kDefaultProtocPluginVersion;
-    rootDirectory = config.getOrNull<String>('proto_root_dir') ??
-        kDefaultProtoRootDirectory;
-    protoPaths = (config.getOrNull<YamlList>('proto_paths'))
-            ?.nodes
-            .map((e) => e.value as String)
-            .toList() ??
-        [];
+    protobufVersion = config.getOrNull<String>('protobuf_version') ?? kDefaultProtocVersion;
+    protocPluginVersion = config.getOrNull<String>('protoc_plugin_version') ?? kDefaultProtocPluginVersion;
+    rootDirectory = config.getOrNull<String>('proto_root_dir') ?? kDefaultProtoRootDirectory;
+    protoPaths = (config.getOrNull<YamlList>('proto_paths'))?.nodes.map((e) => e.value as String).toList() ?? [];
     outputDirectory = config.getOrNull<String>('dart_path') ??
         config.getOrNull<String>('dart_out_dir') ??
         kDefaultDartOutputDirectory;
-    useInstalledProtoc = config.getOrNull<bool>('use_installed_protoc') ??
-        kDefaultUseInstalledProtoc;
-    precompileProtocPlugin =
-        config.getOrNull<bool>('precompile_protoc_plugin') ??
-            kDefaultPrecompileProtocPlugin;
-    generateDescriptorFile =
-        config.getOrNull<bool>('generate_descriptor_file') ??
-            kDefaultGenerateDescriptorFile;
+    useInstalledProtoc = config.getOrNull<bool>('use_installed_protoc') ?? kDefaultUseInstalledProtoc;
+    precompileProtocPlugin = config.getOrNull<bool>('precompile_protoc_plugin') ?? kDefaultPrecompileProtocPlugin;
+    generateDescriptorFile = config.getOrNull<bool>('generate_descriptor_file') ?? kDefaultGenerateDescriptorFile;
+    generateGrpc = config.getOrNull<bool>('generate_grpc') ?? kDefaultGenerateGrpc;
 
     githubRepos = [];
     final githubReposConfig = config.getOrNull<YamlList>('github_repos');
@@ -65,17 +54,15 @@ class ProtobufGenerator implements Builder {
   late bool useInstalledProtoc;
   late bool precompileProtocPlugin;
   late bool generateDescriptorFile;
+  late bool generateGrpc;
   late List<GitHubRepoConfig> githubRepos;
 
   @override
   FutureOr<void> build(BuildStep buildStep) async {
-    final protoc = useInstalledProtoc
-        ? File('protoc')
-        : await ProtocDownloader.fetchProtoc(protobufVersion);
+    final protoc = useInstalledProtoc ? File('protoc') : await ProtocDownloader.fetchProtoc(protobufVersion);
     final protocPlugin = useInstalledProtoc
         ? File('')
-        : await ProtocPluginDownloader.fetchProtocPlugin(
-            protocPluginVersion, precompileProtocPlugin);
+        : await ProtocPluginDownloader.fetchProtocPlugin(protocPluginVersion, precompileProtocPlugin);
 
     if (!protoPaths.contains(rootDirectory)) {
       protoPaths.insert(0, rootDirectory);
@@ -144,8 +131,7 @@ class ProtobufGenerator implements Builder {
   ///
   /// If [protocPlugin] has a valid path, it adds the plugin argument for the Dart
   /// protoc plugin.
-  Future<List<String>> collectProtocArguments(
-      File protocPlugin, String inputPath) async {
+  Future<List<String>> collectProtocArguments(File protocPlugin, String inputPath) async {
     log.warning('Generating protobuf files for $inputPath');
     final args = <String>[];
 
@@ -165,7 +151,16 @@ class ProtobufGenerator implements Builder {
       args.add("--plugin=protoc-gen-dart=${protocPlugin.path}");
     }
 
-    args.add("--dart_out=$outputDirectory");
+    // Configure dart_out with optional grpc support
+    final dartOutOptions = <String>[];
+    if (generateGrpc) {
+      dartOutOptions.add('grpc');
+    }
+
+    final dartOut = dartOutOptions.isNotEmpty
+        ? '--dart_out=${dartOutOptions.join(',')}:$outputDirectory'
+        : '--dart_out=$outputDirectory';
+    args.add(dartOut);
 
     final protoFiles = <String>[];
 
@@ -213,16 +208,21 @@ class ProtobufGenerator implements Builder {
   Map<String, List<String>> get buildExtensions {
     // If no local proto paths are configured, we still need some build extensions
     // to trigger the builder. Use the root directory as fallback.
-    final effectiveRootDir =
-        protoPaths.isNotEmpty ? protoPaths.first : rootDirectory;
+    final effectiveRootDir = protoPaths.isNotEmpty ? protoPaths.first : rootDirectory;
+
+    final extensions = [
+      '$outputDirectory/{{}}.pb.dart',
+      '$outputDirectory/{{}}.pbenum.dart',
+      '$outputDirectory/{{}}.pbjson.dart',
+      '$outputDirectory/{{}}.pbserver.dart',
+    ];
+
+    if (generateGrpc) {
+      extensions.add('$outputDirectory/{{}}.pbgrpc.dart');
+    }
 
     return {
-      join(effectiveRootDir, '{{}}.proto'): [
-        '$outputDirectory/{{}}.pb.dart',
-        '$outputDirectory/{{}}.pbenum.dart',
-        '$outputDirectory/{{}}.pbjson.dart',
-        '$outputDirectory/{{}}.pbserver.dart',
-      ],
+      join(effectiveRootDir, '{{}}.proto'): extensions,
     };
   }
 
@@ -233,6 +233,7 @@ class ProtobufGenerator implements Builder {
   final kDefaultUseInstalledProtoc = false;
   final kDefaultPrecompileProtocPlugin = true;
   final kDefaultGenerateDescriptorFile = false;
+  final kDefaultGenerateGrpc = false;
 }
 
 class GitHubRepoConfig {
