@@ -23,13 +23,17 @@ targets:
             - "proto/"
           # The root directory for generated Dart output files.
           # (Default: "lib/src/proto")
+
           dart_path: "lib/src/generated"
           # Enable the gRPC flag for the Dart protoc plugin to generate `.pbgrpc.dart` files.
           # (Default: false)
+
           generate_grpc: false
           # Whether or not the protoc_plugin Dart scripts should be precompiled for better performance.
           # (Default: true)
+
           precompile_protoc_plugin: true
+          
           generate_descriptor_file: true
           # GitHub repositories configuration
           # GitHub repositories containing proto files to include
@@ -40,17 +44,20 @@ targets:
             # Full format with branch and subdirectory specification
             - url: "https://github.com/grpc/grpc-proto"
               branch: "master"
-              sub_path: "grpc"
+              paths: 
+                - "grpc"
               
             # Another example with a specific tag/branch
             - url: "https://github.com/envoyproxy/protoc-gen-validate"
               branch: "v0.10.1"
-              sub_path: "validate"
+              paths: 
+                - "validate"
               
             # SSH format also supported
             - url: "git@github.com:company/internal-protos.git"
               branch: "main"
-              sub_path: "api/v1"
+              paths: 
+                - "api/v1"
               
             # Custom GitHub domain (GitHub Enterprise) examples
             - url: "git@cred.github.com:dreamplug-tech/protorepo.git"

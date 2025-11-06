@@ -12,6 +12,13 @@ import 'package:yaml/yaml.dart';
 
 import 'downloaders/protoc_downloader.dart';
 
+/// A build_runner builder that generates Dart code from Protocol Buffer definitions.
+///
+/// This builder integrates with the Dart build system to automatically generate
+/// `.pb.dart`, `.pbenum.dart`, `.pbjson.dart`, and `.pbserver.dart` files from
+/// `.proto` files. It handles downloading necessary tools (protoc compiler and
+/// Dart plugin) and manages proto file dependencies including Google APIs and
+/// GitHub repositories.
 class ProtobufGenerator implements Builder {
   ProtobufGenerator(this.options) {
     final config = options.config;
@@ -33,10 +40,19 @@ class ProtobufGenerator implements Builder {
       for (final repoNode in githubReposConfig.nodes) {
         if (repoNode.value is YamlMap) {
           final repoMap = repoNode.value as YamlMap;
+
+          List<String>? paths;
+          if (repoMap.containsKey('paths')) {
+            final pathsValue = repoMap['paths'];
+            if (pathsValue is YamlList) {
+              paths = pathsValue.nodes.map((e) => e.value as String).toList();
+            }
+          }
+
           githubRepos.add(GitHubRepoConfig(
             url: repoMap['url'] as String,
             branch: repoMap['branch'] as String? ?? 'main',
-            subPath: repoMap['sub_path'] as String?,
+            paths: paths,
           ));
         } else if (repoNode.value is String) {
           githubRepos.add(GitHubRepoConfig(url: repoNode.value as String));
@@ -46,45 +62,86 @@ class ProtobufGenerator implements Builder {
   }
 
   final BuilderOptions options;
+
+  /// Version of the protoc compiler to download and use.
   late String protobufVersion;
+
+  /// Version of the Dart protoc plugin to download and use.
   late String protocPluginVersion;
+
+  /// Root directory containing proto files (defaults to 'proto/').
   late String rootDirectory;
+
+  /// Base paths used for both proto file discovery and include paths (-I flags).
   late List<String> protoPaths;
+
+  /// Paths added only as include directories for protoc (-I flags).
+  /// Files in these paths are not automatically generated unless imported.
+  final List<String> includeOnlyPaths = [];
+
+  /// Paths used only for discovering proto files to generate.
+  /// These paths are not added as -I flags to avoid duplicate resolution.
+  final List<String> generationOnlyPaths = [];
+
+  /// Output directory for generated Dart files.
   late String outputDirectory;
+
+  /// Whether to use system-installed protoc instead of downloading.
   late bool useInstalledProtoc;
+
+  /// Whether to precompile the protoc plugin for faster execution.
   late bool precompileProtocPlugin;
+
+  /// Whether to generate descriptor files with import information.
   late bool generateDescriptorFile;
+
+  /// Whether to generate gRPC service stubs.
   late bool generateGrpc;
+
+  /// GitHub repositories to clone and include in proto paths.
   late List<GitHubRepoConfig> githubRepos;
 
   @override
   FutureOr<void> build(BuildStep buildStep) async {
+    // Fetch or use system protoc compiler
     final protoc = useInstalledProtoc ? File('protoc') : await ProtocDownloader.fetchProtoc(protobufVersion);
     final protocPlugin = useInstalledProtoc
         ? File('')
         : await ProtocPluginDownloader.fetchProtocPlugin(protocPluginVersion, precompileProtocPlugin);
 
+    // Ensure root directory is in proto paths
     if (!protoPaths.contains(rootDirectory)) {
       protoPaths.insert(0, rootDirectory);
     }
 
+    // Download and add Google APIs proto files
     final googleApisPaths = await GoogleApisDownloader.fetchProtoGoogleApis();
     protoPaths.addAll(googleApisPaths);
 
-    // Download and add GitHub repositories
+    // Process GitHub repository configurations
     for (final repoConfig in githubRepos) {
-      final repoPath = await GitHubRepoDownloader.fetchGitHubRepo(
+      final repoRootPath = await GitHubRepoDownloader.fetchGitHubRepo(
         repoConfig.url,
         branch: repoConfig.branch,
-        subPath: repoConfig.subPath,
       );
 
-      // Add the proto subdirectory if it exists, otherwise add the repo root
-      final protoSubDir = join(repoPath, 'proto');
+      // Add proto/ subdirectory as include-only path to resolve imports
+      // without generating all files in the repository
+      final protoSubDir = join(repoRootPath, 'proto');
       if (await Directory(protoSubDir).exists()) {
-        protoPaths.add(protoSubDir);
+        includeOnlyPaths.add(protoSubDir);
       } else {
-        protoPaths.add(repoPath);
+        includeOnlyPaths.add(repoRootPath);
+      }
+
+      // Add specific subdirectories for proto file generation if configured
+      if (repoConfig.paths != null && repoConfig.paths!.isNotEmpty) {
+        for (final path in repoConfig.paths!) {
+          final fullPath = join(repoRootPath, path);
+          if (await Directory(fullPath).exists()) {
+            generationOnlyPaths.add(fullPath);
+          }
+        }
       }
     }
 
@@ -92,16 +149,21 @@ class ProtobufGenerator implements Builder {
 
     await buildStep.readAsString(buildStep.inputId);
 
+    // Ensure output directory exists
     await Directory(outputDirectory).create(recursive: true);
+
+    // Generate protoc arguments and execute compilation
     final args = await collectProtocArguments(protocPlugin, inputPath);
     await ProcessUtils.runSafely(
       protoc.path,
       args,
     );
 
+    // Write generated files to build outputs
     await Future.wait(buildStep.allowedOutputs.map((AssetId out) async {
       var file = loadOutputFile(out);
 
+      // Skip optional gRPC files if they don't exist
       if (file.path.endsWith('.pbgrpc.dart') && !await file.exists()) {
         return;
       }
@@ -109,28 +171,23 @@ class ProtobufGenerator implements Builder {
     }));
   }
 
+  /// Loads the generated output file from the file system.
   File loadOutputFile(AssetId out) => File(out.path);
 
-  /// Generates the necessary arguments for the protobuf compiler.
+  /// Constructs command-line arguments for the protoc compiler.
   ///
-  /// This method generates arguments to match the command:
+  /// Generates arguments equivalent to:
+  /// ```
   /// protoc -I proto/ --dart_out=generated/ $(find proto/ -name "*.proto")
+  /// ```
   ///
-  /// Google APIs proto files and Google protobuf types are automatically
-  /// downloaded and included in the proto paths, so they follow the same pattern.
-  /// This includes common types like google/type/decimal.proto, google/protobuf/timestamp.proto, etc.
-  ///
-  /// GitHub repositories specified in the configuration are also downloaded
-  /// and included in the proto paths.
-  ///
-  /// The proto_paths configuration can be empty if you only want to use
-  /// Google APIs and/or GitHub repositories without any local proto files.
-  ///
-  /// If [generateDescriptorFile] is true, it includes the necessary arguments
-  /// to generate a descriptor file with imports included.
-  ///
-  /// If [protocPlugin] has a valid path, it adds the plugin argument for the Dart
-  /// protoc plugin.
+  /// This method:
+  /// - Adds all include paths (-I flags) from protoPaths and includeOnlyPaths
+  /// - Configures output directory and plugin settings
+  /// - Discovers all proto files to compile
+  /// - Recursively resolves imported dependencies (Google APIs, cross-directory imports)
+  /// - Handles descriptor file generation if enabled
+  /// - Supports gRPC service generation if enabled
   Future<List<String>> collectProtocArguments(File protocPlugin, String inputPath) async {
     log.warning('Generating protobuf files for $inputPath');
     final args = <String>[];
@@ -142,16 +199,18 @@ class ProtobufGenerator implements Builder {
       ]);
     }
 
-    // Add include paths for proto directories
-    for (final protoPath in protoPaths) {
-      args.add('-I$protoPath');
+    // Merge and deduplicate all include paths for -I flags
+    final allIncludePaths = {...protoPaths, ...includeOnlyPaths};
+    for (final includePath in allIncludePaths) {
+      args.add('-I$includePath');
     }
 
+    // Add Dart protoc plugin if available
     if (protocPlugin.path.isNotEmpty) {
       args.add("--plugin=protoc-gen-dart=${protocPlugin.path}");
     }
 
-    // Configure dart_out with optional grpc support
+    // Configure output format with optional gRPC support
     final dartOutOptions = <String>[];
     if (generateGrpc) {
       dartOutOptions.add('grpc');
@@ -162,12 +221,15 @@ class ProtobufGenerator implements Builder {
         : '--dart_out=$outputDirectory';
     args.add(dartOut);
 
-    final protoFiles = <String>[];
+    final protoFiles = <String>{};
 
-    for (final protoPath in protoPaths) {
-      // Skip Google APIs directory and Google protobuf src directory - they're only for imports
+    // Discover proto files from all generation paths
+    final allGenerationPaths = {...protoPaths, ...generationOnlyPaths};
+
+    for (final protoPath in allGenerationPaths) {
+      // Skip Google directories; specific imported files will be added by dependency scanner
       if (protoPath.contains('googleapis') ||
-          protoPath.contains('protobuf/src') ||
+          protoPath.contains('protobuf/protobuf-main') ||
           protoPath.contains('protobuf-main/src')) {
         continue;
       }
@@ -177,26 +239,18 @@ class ProtobufGenerator implements Builder {
         final files = dir
             .listSync(recursive: true)
             .where((entity) => entity is File && entity.path.endsWith('.proto'))
-            .where((entity) {
-              // Filter out all files from google/protobuf directory
-              final filePath = entity.path;
-              return !filePath.contains('google/protobuf/');
-            })
             .map((entity) => entity.path)
             .toList();
         protoFiles.addAll(files);
       }
     }
 
-    // Add GitHub repo proto files (non-Google APIs)
-    // Note: GitHub repos are already downloaded and added to protoPaths in the build method
-    // We just need to get proto files from the paths that are not Google APIs
+    // Recursively resolve all imported dependencies
+    await _addGoogleProtoImports(protoFiles, allIncludePaths);
 
-    // If no proto files found, use the input file (unless it's from google/protobuf)
-    if (protoFiles.isEmpty && inputPath.endsWith('.proto')) {
-      if (!inputPath.contains('google/protobuf/')) {
-        protoFiles.add(inputPath);
-      }
+    // Fallback to input file if no proto files were discovered
+    if (protoFiles.isEmpty && inputPath.endsWith('.proto') && !inputPath.contains('google/protobuf/')) {
+      protoFiles.add(inputPath);
     }
 
     args.addAll(protoFiles);
@@ -204,10 +258,88 @@ class ProtobufGenerator implements Builder {
     return args;
   }
 
+  /// Recursively scans proto files for import statements and resolves dependencies.
+  ///
+  /// This method ensures all imported proto files are included in generation,
+  /// even if they're not in the specified generation paths. This handles:
+  /// - Google proto types (google/protobuf/struct.proto, google/type/money.proto, etc.)
+  /// - Cross-directory imports within repositories (payments/poa/v1/poa_response.proto)
+  /// - Transitive dependencies (imports of imports)
+  ///
+  /// Uses an import cache to minimize file system operations for frequently
+  /// imported files.
+  ///
+  /// [protoFiles] is modified in-place to add discovered dependencies.
+  /// [includePaths] specifies directories to search for imported files.
+  Future<void> _addGoogleProtoImports(
+    Set<String> protoFiles,
+    Set<String> includePaths,
+  ) async {
+    final processedFiles = <String>{};
+    final filesToProcess = protoFiles.toList();
+    final importPattern = RegExp(r'import\s+"([^"]+)"');
+
+    // Cache resolved import paths to avoid repeated file existence checks
+    final importCache = <String, String>{};
+
+    while (filesToProcess.isNotEmpty) {
+      final protoFile = filesToProcess.removeLast();
+
+      // Skip already processed files to avoid infinite loops
+      if (processedFiles.contains(protoFile)) {
+        continue;
+      }
+      processedFiles.add(protoFile);
+
+      try {
+        final file = File(protoFile);
+        if (!await file.exists()) {
+          continue;
+        }
+
+        // Extract import statements from proto file content
+        final content = await file.readAsString();
+        final matches = importPattern.allMatches(content);
+
+        for (final match in matches) {
+          final importPath = match.group(1);
+          if (importPath == null) continue;
+
+          // Skip if already collected
+          if (protoFiles.any((f) => f.endsWith(importPath))) {
+            continue;
+          }
+
+          // Try cache first for performance
+          String? fullProtoPath = importCache[importPath];
+
+          if (fullProtoPath == null) {
+            // Resolve import by searching through include paths
+            for (final includePath in includePaths) {
+              fullProtoPath = join(includePath, importPath);
+              if (await File(fullProtoPath).exists()) {
+                importCache[importPath] = fullProtoPath;
+                break;
+              }
+              fullProtoPath = null;
+            }
+          }
+
+          // Add to generation list and queue for recursive processing
+          if (fullProtoPath != null) {
+            protoFiles.add(fullProtoPath);
+            filesToProcess.add(fullProtoPath);
+          }
+        }
+      } catch (e) {
+        // Silently skip files that can't be read
+        continue;
+      }
+    }
+  }
+
   @override
   Map<String, List<String>> get buildExtensions {
-    // If no local proto paths are configured, we still need some build extensions
-    // to trigger the builder. Use the root directory as fallback.
     final effectiveRootDir = protoPaths.isNotEmpty ? protoPaths.first : rootDirectory;
 
     final extensions = [
@@ -226,6 +358,7 @@ class ProtobufGenerator implements Builder {
     };
   }
 
+  // Default configuration values
   final kDefaultProtocVersion = '27.2';
   final kDefaultProtocPluginVersion = '21.1.2';
   final kDefaultProtoRootDirectory = 'proto/';
@@ -236,26 +369,31 @@ class ProtobufGenerator implements Builder {
   final kDefaultGenerateGrpc = false;
 }
 
+/// Configuration for a GitHub repository containing proto files.
 class GitHubRepoConfig {
   const GitHubRepoConfig({
     required this.url,
     this.branch = 'main',
-    this.subPath,
+    this.paths,
   });
 
   /// The GitHub repository URL.
+  ///
   /// Supported formats:
-  /// - https://github.com/owner/repo
-  /// - https://github.com/owner/repo.git
-  /// - git@github.com:owner/repo.git
-  /// - https://custom.github.com/owner/repo (GitHub Enterprise)
-  /// - git@custom.github.com:owner/repo.git (GitHub Enterprise)
+  /// - `https://github.com/owner/repo`
+  /// - `https://github.com/owner/repo.git`
+  /// - `git@github.com:owner/repo.git`
+  /// - `https://custom.github.com/owner/repo` (GitHub Enterprise)
+  /// - `git@custom.github.com:owner/repo.git` (GitHub Enterprise)
   final String url;
 
-  /// The branch or tag to clone (defaults to 'main').
+  /// The branch or tag to clone. Defaults to 'main'.
   final String branch;
 
-  /// Optional subdirectory within the repository to use as the proto root.
-  /// If not specified, the repository root will be used.
-  final String? subPath;
+  /// Optional subdirectories within the repository to generate proto files from.
+  ///
+  /// If `null` or empty, the repository will only be used for import resolution
+  /// and no proto files will be automatically generated from it.
+  /// If specified, only proto files in these subdirectories will be generated.
+  final List<String>? paths;
 }

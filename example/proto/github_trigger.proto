@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+package trigger;
+
+// This is a dummy file to trigger build_runner for GitHub-only repositories
+message GithubTrigger {
+  string dummy = 1;
+}   

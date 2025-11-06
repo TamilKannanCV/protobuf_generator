@@ -93,20 +93,24 @@ targets:
             # Simple format - just the repository URL (uses 'main' branch and repository root)
             - "https://github.com/owner/proto-definitions"
             
-            # Full format with branch and subdirectory specification
+            # Full format with branch and single subdirectory
             - url: "https://github.com/grpc/grpc-proto"
               branch: "master"
-              sub_path: "grpc"
+              paths:
+                - "grpc"
               
             # Another example with a specific tag/branch
             - url: "https://github.com/envoyproxy/protoc-gen-validate"
               branch: "v0.10.1"
-              sub_path: "validate"
+              paths:
+                - "api/v1"
               
             # SSH format also supported
             - url: "git@github.com:company/internal-protos.git"
               branch: "main"
-              sub_path: "api/v1"
+              paths:
+                - "api/v1"
+                - "api/v2"
               
             # Custom GitHub domain (GitHub Enterprise) examples
             - url: "git@cred.github.com:dreamplug-tech/protorepo.git"
@@ -114,6 +118,48 @@ targets:
             - url: "https://enterprise.github.com/company/repo"
               branch: "main"
 ```
+
+## Using Only GitHub Repositories
+
+If you want to use only GitHub repositories without any local proto files, you can:
+
+1. Create a dummy trigger file (e.g., `github_trigger.proto`) with basic proto content
+2. Configure `github_repos` in your `build.yaml` as shown above
+3. Include the dummy trigger file in the `sources` list
+4. Run `dart run build_runner build` to generate code from the GitHub repositories
+
+**Step 1: Create dummy trigger file** (`github_trigger.proto`):
+```protobuf
+syntax = "proto3";
+
+package trigger;
+
+// This is a dummy file to trigger build_runner for GitHub-only repositories
+message GithubTrigger {
+  string dummy = 1;
+}
+```
+
+**Step 2: Configure build.yaml for GitHub-only setup:**
+
+```yaml
+targets:
+  $default:
+    builders:
+      protobuf_generator:
+        options:
+          dart_path: "lib/src/generated"
+          proto_paths: []  # No local proto files
+          github_repos:
+            - url: "https://github.com/grpc/grpc-proto"
+              branch: "master"
+              paths:
+                - "grpc"
+        sources:
+          - github_trigger.proto  # Include the dummy trigger file
+```
+
+The dummy trigger file is required because build_runner needs actual source files to execute. The generator will detect this special file and process only the GitHub repositories, ignoring the trigger file itself during protobuf generation.
 
 ## Running
 
