@@ -392,8 +392,8 @@ class GitHubRepoConfig {
 
   /// Optional subdirectories within the repository to generate proto files from.
   ///
-  /// If `null` or empty, the entire repository will be scanned.
-  /// If specified, only proto files in these subdirectories will be generated,
-  /// while the repository root is still available for import resolution.
+  /// If `null` or empty, the repository will only be used for import resolution
+  /// and no proto files will be automatically generated from it.
+  /// If specified, only proto files in these subdirectories will be generated.
   final List<String>? paths;
 }
