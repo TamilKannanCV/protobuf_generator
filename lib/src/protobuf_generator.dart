@@ -224,7 +224,7 @@ class ProtobufGenerator implements Builder {
     final protoFiles = <String>{};
 
     // Discover proto files from all generation paths
-    final allGenerationPaths = {...protoPaths.toSet(), ...generationOnlyPaths};
+    final allGenerationPaths = {...protoPaths, ...generationOnlyPaths};
 
     for (final protoPath in allGenerationPaths) {
       // Skip Google directories; specific imported files will be added by dependency scanner
